@@ -1,0 +1,243 @@
+1.
+
+select m_name from musician m join concert c on m.m_no=c.concert_orgniser where concert_venue="Assembly Rooms" and con_date>"1997-02-01";
++---------------+
+| m_name        |
++---------------+
+| James Steeple |
++---------------+
+1 row in set (0.00 sec)
+
+2.
+
+select m_name from musician m join performer p on m_no=perf_is join place on born_in=place_no where instrument in ("guitar","violin") and place_country="England";
++------------------+
+| m_name           |
++------------------+
+| Harry Forte      |
+| Davis Heavan     |
+| Alan Fluff       |
+| Theo Mengel      |
+| James First      |
+| Harriet Smithson |
++------------------+
+6 rows in set (0.00 sec)
+
+3.
+
+select m_name,place_town,con_date from concert c join place p on concert_in=place_no join musician m on m_no=concert_orgniser where place_country="USA";
++---------------+------------+------------+
+| m_name        | place_town | con_date   |
++---------------+------------+------------+
+| James Steeple | New York   | 1997-01-15 |
++---------------+------------+------------+
+1 row in set (0.00 sec)
+
+4.
+
+select con_date,concert_venue,c_title from musician join composer on comp_is=m_no join has_composed on comp_no=cmpr_no join composition on cmpn_no=c_no join performance on c_no=performed join concert on performed_in=concert_no where m_name="Andy Jones";
++------------+---------------+----------------+
+| con_date   | concert_venue | c_title        |
++------------+---------------+----------------+
+| 1997-01-15 | Metropolitan  | A Simple Piece |
++------------+---------------+----------------+
+1 row in set (0.00 sec)
+
+5.
+
+select instrument,avg(perf_is) from performer group by instrument;
++------------+--------------+
+| instrument | avg(perf_is) |
++------------+--------------+
+| violin     |       7.0000 |
+| viola      |      12.0000 |
+| banjo      |       6.0000 |
+| guitar     |      15.0000 |
+| trumpet    |      16.0000 |
+| bass       |      10.6667 |
+| flute      |       9.0000 |
+| cornet     |      20.0000 |
+| drums      |       7.0000 |
+| cello      |      12.3333 |
+| trombone   |      20.0000 |
+| horn       |       3.0000 |
+| clarinet   |       8.0000 |
++------------+--------------+
+13 rows in set (0.00 sec)
+
+6.
+
+select m_name,born,instrument from musician join performer on m_no=perf_is where died is null and instrument in (select instrument from performer join musician on perf_is=m_no where m_name like "%Theo%" )and m_name not like "%Theo%";
++-------------+----------+------------+
+| m_name      | born     | instrument |
++-------------+----------+------------+
+| John Smith  | 03/03/50 | violin     |
+| Harry Forte | 28/02/51 | violin     |
+| Harry Forte | 28/02/51 | drums      |
+| Jeff Dawn   | 12/12/45 | violin     |
+| James First | 10/06/65 | violin     |
++-------------+----------+------------+
+5 rows in set (0.04 sec)
+
+7.
+
+select name as band_name,total as no_of_players from ((select avg(cp) average from (select count(player) cp from plays_in group by band_id) a) a1,(select count(player) total,band_id b1,band_name name from plays_in p join band b on band_no=band_id group by band_id) b) where total>average;
++-----------+---------------+
+| band_name | no_of_players |
++-----------+---------------+
+| ROP       |             7 |
+| Oh well   |             6 |
+| AASO      |             7 |
++-----------+---------------+
+3 rows in set (0.00 sec)
+
+8.
+
+select m_name from composer c join performance p on c.comp_is=p.conducted_by join musician m on m.m_no=c.comp_is join place p1 on p1.place_no=m.living_in where place_country="Britain" group by comp_is,conducted_by;
+Empty set (0.00 sec)
+
+                                                        or
+
+select m_name from musician where m_no in (select comp_is from composer join performance on comp_is=conducted_by where comp_is in (select m_no from musician join place on living_in=place_no where place_country="England"));
++-------------+
+| m_name      |
++-------------+
+| Phil Hot    |
+| Rose Spring |
+| Tony Smythe |
++-------------+
+3 rows in set (0.00 sec)
+
+9.
+
+select instrument,count(perf_no) from performer group by instrument having count(perf_no)=(select min(cp) from(select count(perf_no) cp,instrument from performer group by instrument)count);
++------------+----------------+
+| instrument | count(perf_no) |
++------------+----------------+
+| banjo      |              1 |
+| trumpet    |              1 |
+| cornet     |              1 |
+| trombone   |              1 |
+| horn       |              1 |
+| clarinet   |              1 |
++------------+----------------+
+6 rows in set (0.00 sec)
+
+10.
+
+select band_name,c_title from musician join composer on comp_is=m_no join has_composed on comp_no=cmpr_no join composition on cmpn_no=c_no join performance on c_no=performed join band on band_no=gave where m_name="Sue Little";
++---------------------+-----------------------+
+| band_name           | c_title               |
++---------------------+-----------------------+
+| BBSO                | Slow Symphony Blowing |
+| The left Overs      | Slow Song             |
+| Somebody Loves this | Slow Symphony Blowing |
+| Swinging strings    | Slow Song             |
+| BBSO                | Slow Song             |
++---------------------+-----------------------+
+5 rows in set (0.00 sec)
+
+11.
+
+select m_name,place_town from performer join musician on perf_is=m_no join place on place_no=born_in where place_town in (select place_town from musician join place on place_no=born_in where m_name="James First" ) group by m_name;
++-------------+------------+
+| m_name      | place_town |
++-------------+------------+
+| Theo Mengel | London     |
+| Alan Fluff  | London     |
+| James First | London     |
++-------------+------------+
+3 rows in set (0.00 sec)
+
+                                                or
+
+select m_name,place_town from performer join musician on perf_is=m_no join place on place_no=born_in where place_town in (select place_town from musician join place on place_no=born_in where m_name="James First") and m_name!="James First" group by m_name;
++-------------+------------+
+| m_name      | place_town |
++-------------+------------+
+| Theo Mengel | London     |
+| Alan Fluff  | London     |
++-------------+------------+
+2 rows in set (0.00 sec)
+
+12.
+
+select m_name,count(instrument) from musician join place on born_in=place_no join performer on m_no=perf_is where place_country="USA" group by m_no;
++-------------+-------------------+
+| m_name      | count(instrument) |
++-------------+-------------------+
+| Elsie James |                 3 |
+| Helen Smyth |                 1 |
+| Sue Little  |                 1 |
++-------------+-------------------+
+3 rows in set (0.00 sec)
+
+select m_name,count(cmpr_no) composition,count(instrument) instrument from composer join has_composed on cmpr_no=comp_no join composition on cmpn_no=c_no join musician on m_no=comp_is join place on place_no=born_in join performer on perf_is=m_no where place_country="USA" group by comp_is;
++-------------+-------------+------------+
+| m_name      | composition | instrument |
++-------------+-------------+------------+
+| Helen Smyth |           1 |          1 |
+| Sue Little  |           2 |          2 |
++-------------+-------------+------------+
+2 rows in set (0.00 sec)
+
+select c_name,comp compositions,instrument instruments from ((select m_name c_name,count(cmpr_no) comp from composer join has_composed on cmpr_no=comp_no join composition on cmpn_no=c_no right join musician on m_no=comp_is group by m_no)composi,(select m_no,m_name i_name,count(instrument) instrument from musician left join performer on perf_is=m_no group by m_no)ins) where c_name=i_name;
++------------------+--------------+-------------+
+| c_name           | compositions | instruments |
++------------------+--------------+-------------+
+| Fred Bloggs      |            2 |           0 |
+| John Smith       |            0 |           3 |
+| Helen Smyth      |            1 |           1 |
+| Harriet Smithson |            0 |           2 |
+| James First      |            4 |           1 |
+| Theo Mengel      |            0 |           3 |
+| Sue Little       |            2 |           1 |
+| Harry Forte      |            2 |           3 |
+| Phil Hot         |            3 |           0 |
+| Jeff Dawn        |            1 |           2 |
+| Rose Spring      |            2 |           0 |
+| Davis Heavan     |            0 |           3 |
+| Lovely Time      |            2 |           0 |
+| Alan Fluff       |            0 |           2 |
+| Tony Smythe      |            1 |           0 |
+| James Quick      |            0 |           2 |
+| Freda Miles      |            2 |           0 |
+| Elsie James      |            0 |           3 |
+| Andy Jones       |            1 |           0 |
+| Louise Simpson   |            0 |           3 |
+| James Steeple    |            0 |           0 |
+| Steven Chaytors  |            0 |           0 |
++------------------+--------------+-------------+
+22 rows in set (0.00 sec)
+
+                                               or
+
+select c_name,comp compositions,instrument instruments from ((select m_name c_name,count(cmpr_no) comp from composer join has_composed on cmpr_no=comp_no join composition on cmpn_no=c_no right join musician on m_no=comp_is join place on place_no=born_in where place_country="USA" group by m_no)composi,(select m_no,m_name i_name,count(instrument) instrument from musician left join place on place_no=born_in join performer on perf_is=m_no where place_country="USA" group by m_no)ins) where c_name=i_name;
++-------------+--------------+-------------+
+| c_name      | compositions | instruments |
++-------------+--------------+-------------+
+| Elsie James |            0 |           3 |
+| Helen Smyth |            1 |           1 |
+| Sue Little  |            2 |           1 |
++-------------+--------------+-------------+
+3 rows in set (0.00 sec)
+
+                                              or
+
+select c_name,comp compositions,instrument instruments from ((select m_name c_name,count(cmpr_no) comp from composer join has_composed on cmpr_no=comp_no join composition on cmpn_no=c_no right join musician on m_no=comp_is join place on place_no=born_in where place_country="USA" group by m_no)composi,(select m_no,m_name i_name,count(instrument) instrument from musician left join place on place_no=born_in join performer on perf_is=m_no where place_country="Britain" group by m_no)ins) where c_name=i_name;
+Empty set (0.00 sec)
+
+13.
+
+select band_name ,m1.m_name conductor,m2.m_name contact from concert join performance on concert_no=performed_in join musician m1 on m1.m_no=conducted_by join band on band_no=gave join  musician m2 on m2.m_no=band_contact where concert_venue="Royal Albert Hall";
++---------------------+------------+-------------+
+| band_name           | conductor  | contact     |
++---------------------+------------+-------------+
+| Somebody Loves this | Alan Fluff | Theo Mengel |
++---------------------+------------+-------------+
+1 row in set (0.00 sec)
+
+15.
+
+select sue,name from((select m_name sue from band join plays_in on band_id=band_no join performer on perf_no=player join musician on perf_is=m_no where band_name=(select band_name from band join plays_in on band_id=band_no join performer on perf_no=player join musician on m_no=perf_is where m_name="Sue Little"))a,(select m_name jeff from ban d join plays_in on band_id=band_no join performer on perf_no=player join musician on perf_is=m_no where band_name in (select band_name from band join plays_in on band_id=band_no join performer on perf_no=player join musician on m_no=perf_is where m_name="Jeff Dawn"))b) where jeff=sue;
+
