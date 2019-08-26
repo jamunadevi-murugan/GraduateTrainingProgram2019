@@ -237,6 +237,30 @@ select band_name ,m1.m_name conductor,m2.m_name contact from concert join perfor
 +---------------------+------------+-------------+
 1 row in set (0.00 sec)
 
+14.
+
+select m2.m_name,case when m2.born_in=6 then "BORN_IN" End as status from musician m2 join place p1 on m2.born_in=p1.place_no where p1.place_town='Glasgow' union select m1.m_name,case when m1.living_in=6 then "LIVING_IN" end as status from musician m1 join place p1 on m1.living_in=p1.place_no where p1.place_town='Glasgow'union select m2.m_name,case when b1.band_no=2 then "IN_BAND_IN" end as status from band b1 join place p1 on b1.band_home=p1.place_no join plays_in p2 on b1.band_no=p2.band_id join performer p3 on p3.perf_no = p2.player join musician m2 on m2.m_no=p3.perf_is where place_town='Glasgow' order by m_name;
++------------------+------------+
+| m_name           | status     |
++------------------+------------+
+| Andy Jones       | LIVING_IN  |
+| Davis Heavan     | IN_BAND_IN |
+| Elsie James      | IN_BAND_IN |
+| Harriet Smithson | LIVING_IN  |
+| Harry Forte      | IN_BAND_IN |
+| James Quick      | IN_BAND_IN |
+| James Steeple    | LIVING_IN  |
+| Jeff Dawn        | LIVING_IN  |
+| Jeff Dawn        | IN_BAND_IN |
+| John Smith       | IN_BAND_IN |
+| Louise Simpson   | BORN_IN    |
+| Louise Simpson   | LIVING_IN  |
+| Lovely Time      | BORN_IN    |
+| Steven Chaytors  | BORN_IN    |
+| Theo Mengel      | IN_BAND_IN |
++------------------+------------+
+15 rows in set (0.62 sec)
+
 15.
 
 select sue,name from((select m_name sue from band join plays_in on band_id=band_no join performer on perf_no=player join musician on perf_is=m_no where band_name=(select band_name from band join plays_in on band_id=band_no join performer on perf_no=player join musician on m_no=perf_is where m_name="Sue Little"))a,(select m_name jeff from ban d join plays_in on band_id=band_no join performer on perf_no=player join musician on perf_is=m_no where band_name in (select band_name from band join plays_in on band_id=band_no join performer on perf_no=player join musician on m_no=perf_is where m_name="Jeff Dawn"))b) where jeff=sue;
