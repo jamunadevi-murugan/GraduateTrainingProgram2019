@@ -91,14 +91,14 @@ select count(salary),salary from employee where salary=(select max(Salary) from 
 
 10.
 
-select * from employee where dep_id=(select dep_id from dept where dep_manager="NATASHA STEVENS") and name!="NATASHA STEVENS";
-+------+----------------+--------+--------+------------+
-| e_id | name           | dep_id | salary | manager_id |
-+------+----------------+--------+--------+------------+
-| A128 | ADAM WAYNE     | D05    |  94324 | A165       |
-| A129 | JOSEPH ANGELIN | D05    |  44280 | A165       |
-+------+----------------+--------+--------+------------+
-2 rows in set (0.02 sec)
+select * from employee join dept on dep_id=dept_id where dep_manager="NATASHA STEVENS" and name!="NATASHA STEVENS";
++------+----------------+--------+--------+-----------+---------+----------+-----------------+
+| e_id | name           | dep_id | salary | managerid | dept_id | dep_name | dep_manager     |
++------+----------------+--------+--------+-----------+---------+----------+-----------------+
+| A128 | ADAM WAYNE     | D05    |  94324 | A165      | D05     | FINANCE  | NATASHA STEVENS |
+| A129 | JOSEPH ANGELIN | D05    |  44280 | A165      | D05     | FINANCE  | NATASHA STEVENS |
++------+----------------+--------+--------+-----------+---------+----------+-----------------+
+2 rows in set (0.00 sec)
 
 11.
 
