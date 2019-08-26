@@ -41,11 +41,12 @@ SELECT E_ID,NAME FROM EMPLOYEE,DEPT WHERE NAME=DEP_MANAGER;
 
 5.
 
-SELECT E_ID,NAME FROM EMPLOYEE WHERE SALARY=(SELECT MIN(SALARY) FROM EMPLOYEE JOIN DEPT ON EMPLOYEE.DEP_ID=DEPT.DEP_ID where name=dep_manager) ;
+select e_id,name from (select e_id,name,dense_rank() over(order by salary) d
+    -> from employee join dept on dep_id=dept_id where name=dep_manager) a where d=1;
 +------+--------------+
-| E_ID | NAME         |
+| e_id | name         |
 +------+--------------+
-| A187 | ROBERT SWIFT |
+| A298 | ROBERT SWIFT |
 +------+--------------+
 1 row in set (0.00 sec)
 
