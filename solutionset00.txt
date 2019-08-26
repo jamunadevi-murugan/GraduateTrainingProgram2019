@@ -41,8 +41,7 @@ SELECT E_ID,NAME FROM EMPLOYEE,DEPT WHERE NAME=DEP_MANAGER;
 
 5.
 
-select e_id,name from (select e_id,name,dense_rank() over(order by salary) d
-    -> from employee join dept on dep_id=dept_id where name=dep_manager) a where d=1;
+select e_id,name from (select e_id,name,dense_rank() over(order by salary) d from employee join dept on dep_id=dept_id where name=dep_manager) a where d=1;
 +------+--------------+
 | e_id | name         |
 +------+--------------+
@@ -62,9 +61,9 @@ select count(e_id) as no_of_employees,dep_name from employee join dept on employ
 
 7.
 
-select e_id,name from employee where salary=(select max(salary) from employee join dept on employee.dep_id=dept.dep_id where dep_name="FINANCE");
+SELECT E_ID,NAME from (SELECT e_id,name,dense_rank() over(order by salary desc) d FROM EMPLOYEE JOIN DEPT ON EMPLOYEE.DEP_ID=DEPT.DEPt_ID where dep_name="FINANCE") a where d=1 ;
 +------+------------+
-| e_id | name       |
+| E_ID | NAME       |
 +------+------------+
 | A128 | ADAM WAYNE |
 +------+------------+
@@ -72,7 +71,7 @@ select e_id,name from employee where salary=(select max(salary) from employee jo
 
 8.
 
-select e_id,name from employee where salary=(select min(salary) from employee join dept on employee.dep_id=dept.dep_id where dep_name="PRODUCT");
+select e_id,name from (select e_id,name,dense_rank() over(order by salary) d from employee join dept on employee.dep_id=dept.dept_id where dep_name="PRODUCT") a where d=1;
 +------+-------------+
 | e_id | name        |
 +------+-------------+
@@ -82,13 +81,13 @@ select e_id,name from employee where salary=(select min(salary) from employee jo
 
 9.
 
-select count(salary),salary from employee where salary=(select max(Salary) from employee join dept on employee.dep_id=dept.dep_id where dept.dep_name="HEALTH");
-+---------------+--------+
-| count(salary) | salary |
-+---------------+--------+
-|             1 |  94791 |
-+---------------+--------+
-1 row in set (0.14 sec)
+select salary,count(d) from (select salary,dense_rank() over(order by salary desc) d from employee join dept on employee.dep_id=dept.dept_id where dept.dep_name="HEALTH") a where d=1;
++--------+----------+
+| salary | count(d) |
++--------+----------+
+|  94791 |        1 |
++--------+----------+
+1 row in set (0.00 sec)
 
 10.
 
@@ -118,17 +117,17 @@ select e.name,count(e.e_id),d.dep_name,d.dep_manager from employee e join dept d
 
 12.
 
-select d.dep_id,e.e_id,e.manager_id from employee e join dept d on e.dep_id=d.dep_id where e.dep_id=(select dep_id from dept where dep_name="COMMUNICATIONS");
-+--------+------+------------+
-| dep_id | e_id | manager_id |
-+--------+------+------------+
-| D02    | A116 | A187       |
-| D02    | A198 | A187       |
-| D02    | A187 | A298       |
-| D02    | A121 | A187       |
-| D02    | A194 | A187       |
-| D02    | A133 | A187       |
-+--------+------+------------+
+select d.dept_id,e.e_id,e.managerid from employee e join dept d on e.dep_id=d.dept_id where dep_name="COMMUNICATIONS";
++---------+------+-----------+
+| dept_id | e_id | managerid |
++---------+------+-----------+
+| D02     | A116 | A187      |
+| D02     | A121 | A187      |
+| D02     | A133 | A187      |
+| D02     | A187 | A298      |
+| D02     | A194 | A187      |
+| D02     | A198 | A187      |
++---------+------+-----------+
 6 rows in set (0.00 sec)
 
 13.
@@ -147,7 +146,7 @@ select avg(e.salary),d.dep_id,d.dep_name from employee e join dept d on e.dep_id
 
 14.
 
-select sum(salary) from employee where dep_id=(select dep_id from dept where dep_name="FINANCE");
+select sum(salary) from employee join dept on dep_id=dept_id where dep_name="FINANCE";
 +-------------+
 | sum(salary) |
 +-------------+
@@ -156,6 +155,16 @@ select sum(salary) from employee where dep_id=(select dep_id from dept where dep
 1 row in set (0.00 sec)
 
 15.
+
+select min(c),dept_id,dep_manager from (select dept_id,dep_manager,sum(Salary) over(partition by dept_id) c from employee join dept on dep_id=dept_id) e;
++--------+---------+-------------+
+| min(c) | dept_id | dep_manager |
++--------+---------+-------------+
+| 117035 | D01     | TIM ARCHER  |
++--------+---------+-------------+
+1 row in set (0.00 sec)
+
+                                             or
 
 select min(sal),d.dep_id,d.dep_manager from (select sum(Salary) sal from employee group by dep_id) as e,dept d;
 +----------+--------+-------------+
@@ -205,6 +214,16 @@ select count(e_id),dep_name from employee e join dept d on e.dep_id=d.dep_id whe
 
 19.
 
+select max(d),dep_name from (select dep_name,count(e_id) over(partition by dep_id) d from employee join dept on dept_id=dep_id) e ;
++--------+----------+
+| max(d) | dep_name |
++--------+----------+
+|      6 | HEALTH   |
++--------+----------+
+1 row in set (0.04 sec)
+
+                                            or
+                                            
 select max(eid),dep_name from (select count(e_id) eid from employee group by dep_id) as e,dept;
 +----------+----------+
 | max(eid) | dep_name |
@@ -215,20 +234,20 @@ select max(eid),dep_name from (select count(e_id) eid from employee group by dep
 
 20.
 
-select * from employee where dep_id=(select dep_id from dept where dep_manager="TIM COOK");
+select * from employee join dept on dep_id=dept_id where dep_manager="Tim Cook";
 Empty set (0.00 sec)
 
                                           or
-
-mysql> select * from employee where dep_id=(select dep_id from dept where dep_manager="TIM ARCHER");
-+------+----------------+--------+--------+------------+
-| e_id | name           | dep_id | salary | manager_id |
-+------+----------------+--------+--------+------------+
-| A114 | MARTIN TREDEAU | D01    |  54497 | A120       |
-| A132 | PAUL VINCENT   | D01    |  94791 | A120       |
-| A120 | TIM ARCHER     | D01    |  48834 | A298       |
-| A143 | BRAD MICHAEL   | D01    |  24488 | A120       |
-| A176 | EDWARD CANE    | D01    |  89176 | A120       |
-| A111 | JOHN HELLEN    | D01    |  15380 | A120       |
-+------+----------------+--------+--------+------------+
+                                          
+select * from employee join dept on dep_id=dept_id where dep_manager="Tim ARCHER";
++------+----------------+--------+--------+-----------+---------+----------+-------------+
+| e_id | name           | dep_id | salary | managerid | dept_id | dep_name | dep_manager |
++------+----------------+--------+--------+-----------+---------+----------+-------------+
+| A111 | JOHN HELLEN    | D01    |  15380 | A120      | D01     | HEALTH   | TIM ARCHER  |
+| A114 | MARTIN TREDEAU | D01    |  54497 | A120      | D01     | HEALTH   | TIM ARCHER  |
+| A120 | TIM ARCHER     | D01    |  48834 | A298      | D01     | HEALTH   | TIM ARCHER  |
+| A132 | PAUL VINCENT   | D01    |  94791 | A120      | D01     | HEALTH   | TIM ARCHER  |
+| A143 | BRAD MICHAEL   | D01    |  24488 | A120      | D01     | HEALTH   | TIM ARCHER  |
+| A176 | EDWARD CANE    | D01    |  89176 | A120      | D01     | HEALTH   | TIM ARCHER  |
++------+----------------+--------+--------+-----------+---------+----------+-------------+
 6 rows in set (0.00 sec)
