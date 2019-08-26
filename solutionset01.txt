@@ -238,6 +238,20 @@ select name,city from guest where guest_no in (select guest_no from booking b jo
 
 12.
 
+select name,room.room_no from room join hotel on room.hotel_no=hotel.hotel_no left join booking on room.room_no=booking.room_no where booking.room_no is null;
++------------------+---------+
+| name             | room_no |
++------------------+---------+
+| Empire Hotel     |     313 |
+| Park Place       |    1289 |
+| Brownstone Hotel |     876 |
+| Brownstone Hotel |     898 |
+| Clairmont Hotel  |     257 |
++------------------+---------+
+5 rows in set (0.00 sec)
+
+                                                    or
+                                                    
 select name,room_no from room join hotel on room.hotel_no=hotel.hotel_no where room_no not in (select room_no from booking);
 +------------------+---------+
 | name             | room_no |
@@ -252,7 +266,7 @@ select name,room_no from room join hotel on room.hotel_no=hotel.hotel_no where r
 
 13.
 
-select name,city from hotel where hotel_no=(select hotel_no from room where price=(select max(price) from room));
+select name,city from (select name,city,dense_rank() over(order by price desc) a from hotel h join room r on h.hotel_no=r.hotel_no)a1 where a=1;
 +------------+----------+
 | name       | city     |
 +------------+----------+
