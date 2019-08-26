@@ -12,7 +12,7 @@ select name from (select name,dense_rank() over(order by salary desc) as maxsal 
 
 2.
 
-SELECT E_ID,NAME FROM EMPLOYEE where salary=(select min(Salary) from employee);
+ SELECT E_ID,NAME FRom (select e_id,name,dense_rank() over(order by salary) s from employee) e where s=1;
 +------+-------------+
 | E_ID | NAME        |
 +------+-------------+
