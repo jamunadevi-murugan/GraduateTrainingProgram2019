@@ -227,14 +227,14 @@ select count(*) from booking where month(date_from)=9;
 
 11.
 
-select name,city from guest where guest_no in (select guest_no from booking b join hotel h on b.hotel_no=h.hotel_no where month(date_from)=8 and city="New York");
+select g.name,g.city from guest g join booking b on  b.guest_no=g.guest_no join hotel h on b.hotel_no=h.hotel_no where month(date_from)=8 and h.city="New York";
 +---------------+------------+
 | name          | city       |
 +---------------+------------+
 | Adam Wayne    | Pittsburgh |
 | Tara Cummings | Baltimore  |
 +---------------+------------+
-2 rows in set (0.04 sec)
+2 rows in set (0.00 sec)
 
 12.
 
