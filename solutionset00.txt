@@ -214,23 +214,14 @@ select count(e_id),dep_name from employee e join dept d on e.dep_id=d.dep_id whe
 
 19.
 
-select max(d),dep_name from (select dep_name,count(e_id) over(partition by dep_id) d from employee join dept on dept_id=dep_id) e ;
-+--------+----------+
-| max(d) | dep_name |
-+--------+----------+
-|      6 | HEALTH   |
-+--------+----------+
-1 row in set (0.04 sec)
-
-                                            or
-                                            
-select max(eid),dep_name from (select count(e_id) eid from employee group by dep_id) as e,dept;
-+----------+----------+
-| max(eid) | dep_name |
-+----------+----------+
-|        6 | HEALTH   |
-+----------+----------+
-1 row in set (0.00 sec)
+select dep_name,c from (select dep_name,count(e_id) c,dense_rank() over(order by count(e_id) desc) d from employee join dept on dept_id=dep_id group by dep_id) e where d=1;
++----------------+---+
+| dep_name       | c |
++----------------+---+
+| HEALTH         | 6 |
+| COMMUNICATIONS | 6 |
++----------------+---+
+2 rows in set (0.00 sec)
 
 20.
 
