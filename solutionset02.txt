@@ -168,16 +168,13 @@ select name from gardener where gardenerid in (select p1.gardenerfk from planted
 
 10.
 
-select name from plant where plantid in (select plantfk from picked where locationfk in (select locationid from location where name!="West") group by plantfk and month(date1)!=08);
+select p.name from plant p join picked p1 on p.plantid=p1.plantid join location l on l.locationid=p1.locationid where l.name!="West" and month(p1.date1)!=8;
 +--------+
 | name   |
 +--------+
-| Carrot |
-| Corn   |
-| Tomato |
 | Radish |
 +--------+
-4 rows in set (0.00 sec)
+1 row in set (0.00 sec)
 
 
 
