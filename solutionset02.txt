@@ -1,5 +1,15 @@
 1.
 
+select sum(p1.weight) as total_weight from picked p1 join plant p2 on p1.plantid=p2.plantid where name="Corn";
++--------------------+
+| total_weight       |
++--------------------+
+| 17.539999961853027 |
++--------------------+
+1 row in set (0.05 sec)
+
+                                                           or
+
 select sum(weight) as total_weight from picked where plantFK=(select plantid from plant where name="Corn");
 +--------------+
 | total_weight |
