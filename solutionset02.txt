@@ -118,9 +118,9 @@ select name,sum(seeds) from planted join plant on plantid=plantfk group by plant
 +---------+------------+
 6 rows in set (0.00 sec)
 
-7.doubt
+7.
 
-select amount/seeds as avg_items_produced,name from picked p1,planted p2,plant where p1.plantfk=p2.plantfk and p2.plantfk=plant.plantid group by plantid;
+select amount/seeds as avg_items_produced,name from picked p1 join planted p2 on p1.plantid=p2.plantid join plant on p2.plantid=plant.plantid group by plant.name;
 +--------------------+--------+
 | avg_items_produced | name   |
 +--------------------+--------+
