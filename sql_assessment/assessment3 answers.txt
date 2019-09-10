@@ -1,0 +1,86 @@
+1.
+
+select emp_id,emp_name,desc_name,place_desc,count(emp_id) over(partition by desc_name) c1,count(emp_id) over(partition by place_desc) c2 from (select emp_id,emp_name,case when desc_name is null then "OTHERS" else desc_name end as desc_name,case when place_desc is null then "OTHERS" else place_desc end as place_desc from employee e left join designation d on e.desc_id=d.desc_id left join place p on e.place_id=p.place_id)a;
++--------+---------------+-----------+------------+----+----+
+| emp_id | emp_name      | desc_name | place_desc | c1 | c2 |
++--------+---------------+-----------+------------+----+----+
+|      8 | Shalini       | SE        | Bangalore  |  3 |  2 |
+|      4 | Santosh       | SSE       | Bangalore  |  2 |  2 |
+|      1 | Vijaykumar    | ASE       | Chennai    |  3 |  2 |
+|      9 | Avantika      | SSE       | Chennai    |  2 |  2 |
+|      7 | Suganya       | ASE       | Hyderabad  |  3 |  3 |
+|      2 | Raja          | SE        | Hyderabad  |  3 |  3 |
+|      5 | Kribakaran    | SE        | Hyderabad  |  3 |  3 |
+|      3 | Abhisheksingh | ASE       | Mexico     |  3 |  1 |
+|     13 | Karthick      | OTHERS    | Newyork    |  5 |  2 |
+|      6 | Divya         | TL        | Newyork    |  1 |  2 |
+|     10 | Ajay          | AM        | OTHERS     |  1 |  5 |
+|     11 | Tamilselvan   | OTHERS    | OTHERS     |  5 |  5 |
+|     12 | Vinodha       | OTHERS    | OTHERS     |  5 |  5 |
+|     14 | Sanjay        | OTHERS    | OTHERS     |  5 |  5 |
+|     15 | Meera         | OTHERS    | OTHERS     |  5 |  5 |
++--------+---------------+-----------+------------+----+----+
+15 rows in set (0.03 sec)
+
+2.
+
+select emp_id,emp_name,desc_name,place_desc,proj_name from employee e join designation d on e.desc_id=d.desc_id join place p on e.place_id=p.place_id join project p1 on p1.proj_id=e.proj_id where proj_name like "%Data%" or proj_name like "%Cloud%";
++--------+---------------+-----------+------------+------------------------+
+| emp_id | emp_name      | desc_name | place_desc | proj_name              |
++--------+---------------+-----------+------------+------------------------+
+|      1 | Vijaykumar    | ASE       | Chennai    | Pepsi Data Mart        |
+|      9 | Avantika      | SSE       | Chennai    | Amazon Cloud Logistics |
+|      8 | Shalini       | SE        | Bangalore  | ASG Data Warehousing   |
+|      4 | Santosh       | SSE       | Bangalore  | Neon Data & Analytics  |
+|      5 | Kribakaran    | SE        | Hyderabad  | ASG Data Warehousing   |
+|      3 | Abhisheksingh | ASE       | Mexico     | Amazon Cloud Logistics |
+|      6 | Divya         | TL        | Newyork    | Pepsi Data Mart        |
++--------+---------------+-----------+------------+------------------------+
+7 rows in set (0.00 sec)
+
+3.
+
+select emp_id,emp_name,desc_name,place_desc,proj_name from (select dense_rank() over(partition by e.place_id order by e.desc_id desc,e.proj_id asc) r,emp_id,emp_name,desc_name,place_desc,proj_name from employee e join designation d on e.desc_id=d.desc_id join place p on e.place_id=p.place_id join project p1 on e.proj_id=p1.proj_id)a where r=1;
++--------+---------------+-----------+------------+------------------------+
+| emp_id | emp_name      | desc_name | place_desc | proj_name              |
++--------+---------------+-----------+------------+------------------------+
+|      9 | Avantika      | SSE       | Chennai    | Amazon Cloud Logistics |
+|      4 | Santosh       | SSE       | Bangalore  | Neon Data & Analytics  |
+|      5 | Kribakaran    | SE        | Hyderabad  | ASG Data Warehousing   |
+|      3 | Abhisheksingh | ASE       | Mexico     | Amazon Cloud Logistics |
+|      6 | Divya         | TL        | Newyork    | Pepsi Data Mart        |
++--------+---------------+-----------+------------+------------------------+
+5 rows in set (0.01 sec)
+
+4.
+
+select salesman_name salesmanager_name,cust_name from (select dense_rank() over(partition by s1.salesman_id order by purchased_amount desc) r,s1.salesman_name,cust_name from salesman s1 join salesman s2 on s1.salesman_id=s2.sales_manager_id join customer1 c on c.salesman_id=s2.salesman_id) a where r=1;
++-------------------+-----------+
+| salesmanager_name | cust_name |
++-------------------+-----------+
+| Abraham           | James     |
+| Srinath           | Jyothi    |
+| Vijay             | Dinesh    |
+| Balaji            | Arun      |
++-------------------+-----------+
+4 rows in set (0.00 sec)
+
+5.
+
+update salesman s join (select salesman_id,sum(purchased_amount) s from customer1 group by salesman_id) a on s.salesman_id=a.salesman_id set monthly_target=a.s;
+Query OK, 3 rows affected (0.26 sec)
+Rows matched: 5  Changed: 3  Warnings: 0
+
+mysql> select * from salesman;
++-------------+---------------+-----------+------------------+----------------+
+| salesman_id | salesman_name | city      | sales_manager_id | monthly_target |
++-------------+---------------+-----------+------------------+----------------+
+|           1 | John          | Chennai   |                2 |          10000 |
+|           2 | Abraham       | Bangalore |                4 |           8000 |
+|           3 | Raju          | Hyderabad |                4 |          23000 |
+|           4 | Srinath       | Mumbai    |                5 |           9000 |
+|           5 | Vijay         | Chennai   |                6 |           5000 |
+|           6 | Balaji        | Hyderabad |                6 |          15000 |
++-------------+---------------+-----------+------------------+----------------+
+6 rows in set (0.00 sec)
+

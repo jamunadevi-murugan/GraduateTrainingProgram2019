@@ -1,0 +1,199 @@
+1.
+select * from (select d.dept_id,d.dept_name,case when sum(emp_sal) is null then 0 else sum(emp_sal) end as salary from employee e right join department d on e.dept_id=d.dept_id group by e.dept_id) a;
++---------+-----------+--------+
+| dept_id | dept_name | salary |
++---------+-----------+--------+
+|       1 | it        |   9000 |
+|       2 | admin     |  11000 |
+|       4 | hr        |      0 |
++---------+-----------+--------+
+3 rows in set (0.00 sec)
+
+select * from (select d.dept_id,d.dept_name,sum(case when emp_sal is null then 0 else emp_sal end ) salary from employee e right join department d on e.dept_id=d.dept_id group by e.dept_id) a;
++---------+-----------+--------+
+| dept_id | dept_name | salary |
++---------+-----------+--------+
+|       1 | it        |   9000 |
+|       2 | admin     |  11000 |
+|       4 | hr        |      0 |
++---------+-----------+--------+
+3 rows in set (0.00 sec)
+
+select d.dept_id,d.dept_name,coalesce(sum(emp_sal),0) salary from employee e right join department d on e.dept_id=d.dept_id group by d.dept_id;
++---------+-----------+--------+
+| dept_id | dept_name | salary |
++---------+-----------+--------+
+|       1 | it        |   9000 |
+|       2 | admin     |  11000 |
+|       4 | hr        |      0 |
++---------+-----------+--------+
+3 rows in set (0.00 sec)
+
+2.
+select * from (select e.dept_id,case when dept_name is null then "Others" else dept_name end as dept_name,sum(emp_sal) from employee e left join department d on e.dept_id=d.dept_id group by e.dept_id) a;
++---------+-----------+--------------+
+| dept_id | dept_name | sum(emp_sal) |
++---------+-----------+--------------+
+|       1 | it        |         9000 |
+|       2 | admin     |        11000 |
+|       3 | Others    |         7000 |
++---------+-----------+--------------+
+3 rows in set (0.00 sec)
+
+3.
+select emp_id,emp_name,manager_id,salary from employee2 where salary>=2700 and salary<=10000;
++--------+----------+------------+--------+
+| emp_id | emp_name | manager_id | salary |
++--------+----------+------------+--------+
+|      3 | vinoth   |          1 |   3000 |
+|      4 | abhishek |          2 |   5000 |
+|      5 | divya    |          3 |   6000 |
+|      8 | aarthi   |          4 |   2700 |
++--------+----------+------------+--------+
+4 rows in set (0.00 sec)
+
+4.
+select e1.emp_id manager_id,e1.emp_name as manager_name,sum(e2.salary) as salary from employee2 e1 join employee2 e2 on e1.emp_id=e2.manager_id group by e2.manager_id,e2.manager_id order by manager_id;
++------------+--------------+--------+
+| manager_id | manager_name | salary |
++------------+--------------+--------+
+|          1 | vivek        |   5000 |
+|          2 | raj          |   5000 |
+|          3 | vinoth       |  10850 |
+|          4 | abhishek     |   2700 |
+|          8 | aarthi       |  11000 |
++------------+--------------+--------+
+5 rows in set (0.00 sec)
+
+
+select manager_id,emp_name,sum(Salary) over(partition by manager_id) from employee2;
++------------+----------+-------------------------------------------+
+| manager_id | emp_name | sum(Salary) over(partition by manager_id) |
++------------+----------+-------------------------------------------+
+|          1 | raj      |                                      5000 |
+|          1 | vinoth   |                                      5000 |
+|          2 | abhishek |                                      5000 |
+|          3 | divya    |                                     10850 |
+|          3 | chitra   |                                     10850 |
+|          3 | devi     |                                     10850 |
+|          4 | aarthi   |                                      2700 |
+|          8 | vivek    |                                     11000 |
++------------+----------+-------------------------------------------+
+8 rows in set (0.00 sec)
+
+5.
+select emp_id,substr(emp_name,4) from employee3;
++--------+--------------------+
+| emp_id | substr(emp_name,4) |
++--------+--------------------+
+|      1 | eshkumar           |
+|      2 | ayaraja            |
+|      3 | ishek              |
+|      4 | eshkumar           |
+|      5 | ayaprakashsingh    |
+|      6 | yashree            |
++--------+--------------------+
+6 rows in set (0.00 sec)
+
+select emp_id,substr(emp_name,4,length(emp_name)) from employee3;
++--------+-------------------------------------+
+| emp_id | substr(emp_name,4,length(emp_name)) |
++--------+-------------------------------------+
+|      1 | eshkumar                            |
+|      2 | ayaraja                             |
+|      3 | ishek                               |
+|      4 | eshkumar                            |
+|      5 | ayaprakashsingh                     |
+|      6 | yashree                             |
++--------+-------------------------------------+
+6 rows in set (0.00 sec)
+
+6.
+select emp_id,substr(emp_name,instr(emp_name,"h"),length(emp_name)) from employee3;
++--------+-------------------------------------------------------+
+| emp_id | substr(emp_name,instr(emp_name,"h"),length(emp_name)) |
++--------+-------------------------------------------------------+
+|      1 | hkumar                                                |
+|      2 | hayaraja                                              |
+|      3 | hishek                                                |
+|      4 | hkumar                                                |
+|      5 | hsingh                                                |
+|      6 | hree                                                  |
++--------+-------------------------------------------------------+
+6 rows in set (0.00 sec)
+                               
+
+select emp_id,substr(emp_name,instr(emp_name,"h"),length(emp_name)) from employee3;
++--------+-------------------------------------------------------+
+| emp_id | substr(emp_name,instr(emp_name,"h"),length(emp_name)) |
++--------+-------------------------------------------------------+
+|      1 | hkumar                                                |
+|      2 | hayaraja                                              |
+|      3 | hishek                                                |
+|      4 | hkumar                                                |
+|      5 | hsingh                                                |
+|      6 | hree                                                  |
++--------+-------------------------------------------------------+
+6 rows in set (0.00 sec)
+
+7.
+select emp_id,emp_name,salary from employee2 e1 where 1=(select count(distinct salary) from employee2 e2 where e1.salary<e2.salary);
++--------+----------+--------+
+| emp_id | emp_name | salary |
++--------+----------+--------+
+|      5 | divya    |   6000 |
++--------+----------+--------+
+1 row in set (0.00 sec)
+
+8.
+select emp_id,emp_name,salary from (select emp_id,emp_name,salary,dense_rank() over(order by salary desc) d from employee2) a where d<=3;
++--------+----------+--------+
+| emp_id | emp_name | salary |
++--------+----------+--------+
+|      1 | vivek    |  11000 |
+|      5 | divya    |   6000 |
+|      4 | abhishek |   5000 |
++--------+----------+--------+
+3 rows in set (0.00 sec)
+
+9.
+select emp_id,emp_name,dept_name,salary from employee4 where salary>3000 and dept_name="it"
+    -> union
+    -> select emp_id,emp_name,dept_name,salary from employee4 where salary>3400 and dept_name="admin"
+    -> ;
++--------+----------+-----------+--------+
+| emp_id | emp_name | dept_name | salary |
++--------+----------+-----------+--------+
+|      1 | vivek    | it        |  11000 |
+|      4 | abhishek | it        |   5700 |
+|      2 | raj      | admin     |   3500 |
++--------+----------+-----------+--------+
+3 rows in set (0.00 sec)
+
+10.
+select * from employee4 where instr(emp_name,"j");
++--------+----------+-----------+--------+
+| emp_id | emp_name | dept_name | salary |
++--------+----------+-----------+--------+
+|      2 | raj      | admin     |   3500 |
++--------+----------+-----------+--------+
+1 row in set (0.00 sec)
+
+11.
+select * from employee4 where emp_name like "%j%" or emp_name like "%n%" or emp_name like "%m%";
++--------+----------+-----------+--------+
+| emp_id | emp_name | dept_name | salary |
++--------+----------+-----------+--------+
+|      2 | raj      | admin     |   3500 |
+|      3 | vinoth   | hr        |   4800 |
++--------+----------+-----------+--------+
+2 rows in set (0.00 sec)
+
+12.
+select * from employee4 where emp_name like "%v%" and emp_name like "%h%" and emp_name like "%n%";
++--------+----------+-----------+--------+
+| emp_id | emp_name | dept_name | salary |
++--------+----------+-----------+--------+
+|      3 | vinoth   | hr        |   4800 |
++--------+----------+-----------+--------+
+1 row in set (0.00 sec)

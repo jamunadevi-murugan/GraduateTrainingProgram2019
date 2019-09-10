@@ -1,0 +1,642 @@
+create table author(author_id varchar(10),author_name varchar(30),author_country varchar(30),author_city varchar(30),publish_id varchar(10));
+
+insert into author values('AUT001',"William Norton",'UK','Cambridge ','PB01');
+insert into author values('AUT002',"C. J. Wilde",'USA','San Francisco','PB04');
+insert into author values('AUT003',"John Betjeman               Hunter",'RUSSIA','Moscow','PB01');
+insert into author values('AUT004',"John Betjeman Hunter",'CANADA','Toronto','PB03');
+insert into author values('AUT005'	,"S.B.Swaminathan",	'INDIA'	,'Delhi'	,'PB01');
+insert into author values('AUT006'	,"Butler Andre"  ,	'UK'      , 'London','PB03');
+insert into author values('AUT007'	,"E. Howard" ,	'EUROPE',	'Berlin	','PB03');
+insert into author values('AUT008'	,"Andrew Jeff",'GERMANY'	,'Berlin'	,'PB02');
+insert into author values('AUT009'	,"Drek Tailor",	'Australia',	'Melbourne'	,'PB01');
+insert into author values('AUT010'	,"Mary Coffing",	'USA'	,'New Jersy',	'PB04');
+
+create table publish(publish_id varchar(10),publish_name varchar(30),publish_city varchar(20),publish_start_date date,branches integer(5));
+
+insert into publish values('PB01','Jex Max Publication','Berlin','1929-04-21',10);
+insert into publish values('PB02','Summer Night Publication','Canada','2019-08-31',25);
+insert into publish values('PB03','Novel Publisher Ltd.' ,'London','2018-08-10',11);
+insert into publish values('PB04','Mark Book Sales','New Jersy','2008-05-24',9);
+
+1.
+
+select p.publish_id,publish_name,publish_city,publish_start_date,branches from author a join publish p on a.publish_id=p.publish_id where author_city != publish_city and a.author_country=p.publish_city;
+Empty set (0.00 sec)
+
+2.
+
+select publish_id,branches from(select dense_rank() over(partition by century order by branches desc) r,publish_id,branches from (select round(year(publish_start_date)/100)+1 century,publish_id,branches from publish)a)b where r=1 ;
++------------+----------+
+| publish_id | branches |
++------------+----------+
+| PB01       |       10 |
+| PB02       |       25 |
++------------+----------+
+2 rows in set (0.00 sec)
+
+select author_name,author_id,branches from(select dense_rank() over(partition by century order by branches desc) r,pub,branches from (select round(year(publish_start_date)/100)+1 century,publish_id pub,branches from publish)a)b join author a on pub=a.publish_id where r=1 ;
++----------------------+-----------+----------+
+| author_name          | author_id | branches |
++----------------------+-----------+----------+
+| William Norton       | AUT001    |       10 |
+| John Betjeman Hunter | AUT003    |       10 |
+| S.B.Swaminathan      | AUT005    |       10 |
+| Andrew Jeff          | AUT008    |       25 |
+| Drek Tailor          | AUT009    |       10 |
++----------------------+-----------+----------+
+5 rows in set (0.00 sec)
+
+3.
+
+select * from author where author_country in ( select author_country from publish p join author a on p.publish_id=a.publish_id where a.author_city=p.publish_city);
++-----------+----------------+----------------+---------------+------------+
+| author_id | author_name    | author_country | author_city   | publish_id |
++-----------+----------------+----------------+---------------+------------+
+| AUT001    | William Norton | UK             | Cambridge     | PB01       |
+| AUT002    | C. J. Wilde    | USA            | San Francisco | PB04       |
+| AUT006    | Butler Andre   | UK             | London        | PB03       |
+| AUT010    | Mary Coffing   | USA            | New Jersy     | PB04       |
++-----------+----------------+----------------+---------------+------------+
+4 rows in set (0.00 sec)
+
+select * from publish p join author a on p.publish_id=a.publish_id join author a1 on a1.author_country=a.author_country where a.author_city=p.publish_city;
++------------+----------------------+--------------+--------------------+----------+-----------+--------------+----------------+-------------+------------+-----------+----------------+----------------+---------------+------------+
+| publish_id | publish_name         | publish_city | publish_start_date | branches | author_id | author_name  | author_country | author_city | publish_id | author_id | author_name    | author_country | author_city   | publish_id |
++------------+----------------------+--------------+--------------------+----------+-----------+--------------+----------------+-------------+------------+-----------+----------------+----------------+---------------+------------+
+| PB03       | Novel Publisher Ltd. | London       | 2018-08-10         |       11 | AUT006    | Butler Andre | UK             | London      | PB03       | AUT001    | William Norton | UK             | Cambridge     | PB01       |
+| PB04       | Mark Book Sales      | New Jersy    | 2008-05-24         |        9 | AUT010    | Mary Coffing | USA            | New Jersy   | PB04       | AUT002    | C. J. Wilde    | USA            | San Francisco | PB04       |
+| PB03       | Novel Publisher Ltd. | London       | 2018-08-10         |       11 | AUT006    | Butler Andre | UK             | London      | PB03       | AUT006    | Butler Andre   | UK             | London        | PB03       |
+| PB04       | Mark Book Sales      | New Jersy    | 2008-05-24         |        9 | AUT010    | Mary Coffing | USA            | New Jersy   | PB04       | AUT010    | Mary Coffing   | USA            | New Jersy     | PB04       |
++------------+----------------------+--------------+--------------------+----------+-----------+--------------+----------------+-------------+------------+-----------+----------------+----------------+---------------+------------+
+4 rows in set (0.00 sec)
+
+select a1.author_name,a1.author_id,a1.author_city,a1.author_country,p1.publish_name,p1.publish_city,p1.publish_id from publish p join author a on p.publish_id=a.publish_id join author a1 on a1.author_country=a.author_country join publish p1 on p1.publish_id=a1.publish_id where a.author_city=p.publish_city;
++----------------+-----------+---------------+----------------+----------------------+--------------+------------+
+| author_name    | author_id | author_city   | author_country | publish_name         | publish_city | publish_id |
++----------------+-----------+---------------+----------------+----------------------+--------------+------------+
+| William Norton | AUT001    | Cambridge     | UK             | Jex Max Publication  | Berlin       | PB01       |
+| Butler Andre   | AUT006    | London        | UK             | Novel Publisher Ltd. | London       | PB03       |
+| C. J. Wilde    | AUT002    | San Francisco | USA            | Mark Book Sales      | New Jersy    | PB04       |
+| Mary Coffing   | AUT010    | New Jersy     | USA            | Mark Book Sales      | New Jersy    | PB04       |
++----------------+-----------+---------------+----------------+----------------------+--------------+------------+
+4 rows in set (0.00 sec)
+
+4.
+
+
+
+5.
+
+select author_name1 from (select distinct a1.author_name author_name1,case when a.author_country is null then "OTHERS" when a.author_country is not null and a.author_country="EUROPE" then "GERMANY" else a.author_country end as authorcountry1,case when a.author_city is null then "OTHERS" else a.author_city end as author_city1 ,p.publish_city,a1.author_country authorcountry2,a1.author_city from author a join publish p on a.author_city=p.publish_city right join author a1 on a1.publish_id=p.publish_id)a where authorcountry1!=authorcountry2;
++----------------------+
+| author_name1         |
++----------------------+
+| John Betjeman Hunter |
+| E. Howard            |
+| William Norton       |
+| John Betjeman Hunter |
+| S.B.Swaminathan      |
+| Drek Tailor          |
+| Andrew Jeff          |
++----------------------+
+7 rows in set (0.00 sec)
+
+
+select * from author where author_country not in ( select author_country from publish p join author a on p.publish_id=a.publish_id where a.author_city=p.publish_city);
++-----------+----------------------+----------------+-------------+------------+
+| author_id | author_name          | author_country | author_city | publish_id |
++-----------+----------------------+----------------+-------------+------------+
+| AUT003    | John Betjeman Hunter | RUSSIA         | Moscow      | PB01       |
+| AUT004    | John Betjeman Hunter | CANADA         | Toronto     | PB03       |
+| AUT005    | S.B.Swaminathan      | INDIA          | Delhi       | PB01       |
+| AUT007    | E. Howard            | EUROPE         | Berlin      | PB03       |
+| AUT008    | Andrew Jeff          | GERMANY        | Berlin      | PB02       |
+| AUT009    | Drek Tailor          | Australia      | Melbourne   | PB01       |
++-----------+----------------------+----------------+-------------+------------+
+6 rows in set (0.06 sec)
+
+select * from publish p join author a on p.publish_id=a.publish_id and a.author_city=p.publish_city right join author a1 on a1.author_country=a.author_country where p.publish_id is null;
++------------+--------------+--------------+--------------------+----------+-----------+-------------+----------------+-------------+------------+-----------+----------------------+----------------+-------------+------------+
+| publish_id | publish_name | publish_city | publish_start_date | branches | author_id | author_name | author_country | author_city | publish_id | author_id | author_name          | author_country | author_city | publish_id |
++------------+--------------+--------------+--------------------+----------+-----------+-------------+----------------+-------------+------------+-----------+----------------------+----------------+-------------+------------+
+| NULL       | NULL         | NULL         | NULL               |     NULL | NULL      | NULL        | NULL           | NULL        | NULL       | AUT003    | John Betjeman Hunter | RUSSIA         | Moscow      | PB01       |
+| NULL       | NULL         | NULL         | NULL               |     NULL | NULL      | NULL        | NULL           | NULL        | NULL       | AUT004    | John Betjeman Hunter | CANADA         | Toronto     | PB03       |
+| NULL       | NULL         | NULL         | NULL               |     NULL | NULL      | NULL        | NULL           | NULL        | NULL       | AUT005    | S.B.Swaminathan      | INDIA          | Delhi       | PB01       |
+| NULL       | NULL         | NULL         | NULL               |     NULL | NULL      | NULL        | NULL           | NULL        | NULL       | AUT007    | E. Howard            | EUROPE         | Berlin      | PB03       |
+| NULL       | NULL         | NULL         | NULL               |     NULL | NULL      | NULL        | NULL           | NULL        | NULL       | AUT008    | Andrew Jeff          | GERMANY        | Berlin      | PB02       |
+| NULL       | NULL         | NULL         | NULL               |     NULL | NULL      | NULL        | NULL           | NULL        | NULL       | AUT009    | Drek Tailor          | Australia      | Melbourne   | PB01       |
++------------+--------------+--------------+--------------------+----------+-----------+-------------+----------------+-------------+------------+-----------+----------------------+----------------+-------------+------------+
+6 rows in set (0.00 sec)
+
+select a1.author_name,a1.author_id from publish p join author a on p.publish_id=a.publish_id and a.author_city=p.publish_city right join author a1 on a1.author_country=a.author_country where p.publish_id is null;
++----------------------+-----------+
+| author_name          | author_id |
++----------------------+-----------+
+| John Betjeman Hunter | AUT004    |
+| S.B.Swaminathan      | AUT005    |
+| E. Howard            | AUT007    |
+| Andrew Jeff          | AUT008    |
+| Drek Tailor          | AUT009    |
+| John Betjeman Hunter | AUT003    |
++----------------------+-----------+
+6 rows in set (0.00 sec)
+
+6.
+
+select * from author a join publish p on a.publish_id=p.publish_id where lower(substr(author_name,1,1))=lower(substr(publish_name,1,1));
++-----------+----------------------+----------------+-------------+------------+------------+---------------------+--------------+--------------------+----------+
+| author_id | author_name          | author_country | author_city | publish_id | publish_id | publish_name        | publish_city | publish_start_date | branches |
++-----------+----------------------+----------------+-------------+------------+------------+---------------------+--------------+--------------------+----------+
+| AUT003    | John Betjeman Hunter | RUSSIA         | Moscow      | PB01       | PB01       | Jex Max Publication | Berlin       | 1929-04-21         |       10 |
+| AUT010    | Mary Coffing         | USA            | New Jersy   | PB04       | PB04       | Mark Book Sales     | New Jersy    | 2008-05-24         |        9 |
++-----------+----------------------+----------------+-------------+------------+------------+---------------------+--------------+--------------------+----------+
+2 rows in set (0.00 sec)
+
+select author_name,publish_name from author a join publish p on a.publish_id=p.publish_id where lower(substr(author_name,1,1))=lower(substr(publish_name,1,1));
++----------------------+---------------------+
+| author_name          | publish_name        |
++----------------------+---------------------+
+| John Betjeman Hunter | Jex Max Publication |
+| Mary Coffing         | Mark Book Sales     |
++----------------------+---------------------+
+2 rows in set (0.00 sec)
+
+7.
+
+select * from author where locate(".",author_name,locate(".",author_name)+1)>2;
++-----------+-----------------+----------------+---------------+------------+
+| author_id | author_name     | author_country | author_city   | publish_id |
++-----------+-----------------+----------------+---------------+------------+
+| AUT002    | C. J. Wilde     | USA            | San Francisco | PB04       |
+| AUT005    | S.B.Swaminathan | INDIA          | Delhi         | PB01       |
++-----------+-----------------+----------------+---------------+------------+
+2 rows in set (0.00 sec)
+
+select * from author where locate(".",author_name,locate(".",author_name)+1);
++-----------+-----------------+----------------+---------------+------------+
+| author_id | author_name     | author_country | author_city   | publish_id |
++-----------+-----------------+----------------+---------------+------------+
+| AUT002    | C. J. Wilde     | USA            | San Francisco | PB04       |
+| AUT005    | S.B.Swaminathan | INDIA          | Delhi         | PB01       |
++-----------+-----------------+----------------+---------------+------------+
+2 rows in set (0.00 sec)
+
+8.
+
+select * from author where author_name not like("%.%");
++-----------+----------------------+----------------+-------------+------------+
+| author_id | author_name          | author_country | author_city | publish_id |
++-----------+----------------------+----------------+-------------+------------+
+| AUT001    | William Norton       | UK             | Cambridge   | PB01       |
+| AUT003    | John Betjeman Hunter | RUSSIA         | Moscow      | PB01       |
+| AUT004    | John Betjeman Hunter | CANADA         | Toronto     | PB03       |
+| AUT006    | Butler Andre         | UK             | London      | PB03       |
+| AUT008    | Andrew Jeff          | GERMANY        | Berlin      | PB02       |
+| AUT009    | Drek Tailor          | Australia      | Melbourne   | PB01       |
+| AUT010    | Mary Coffing         | USA            | New Jersy   | PB04       |
++-----------+----------------------+----------------+-------------+------------+
+7 rows in set (0.06 sec)
+
+9.
+
+select * from author where binary(author_country) regexp "[a-z]";
++-----------+-------------+----------------+-------------+------------+
+| author_id | author_name | author_country | author_city | publish_id |
++-----------+-------------+----------------+-------------+------------+
+| AUT009    | Drek Tailor | Australia      | Melbourne   | PB01       |
++-----------+-------------+----------------+-------------+------------+
+1 row in set (0.00 sec)
+
+select * from author where binary(author_country) rlike "[a-z]";
++-----------+-------------+----------------+-------------+------------+
+| author_id | author_name | author_country | author_city | publish_id |
++-----------+-------------+----------------+-------------+------------+
+| AUT009    | Drek Tailor | Australia      | Melbourne   | PB01       |
++-----------+-------------+----------------+-------------+------------+
+1 row in set (0.00 sec)
+
+select * from author where ascii(substr(author_country,2)) between 97 and 122;
++-----------+-------------+----------------+-------------+------------+
+| author_id | author_name | author_country | author_city | publish_id |
++-----------+-------------+----------------+-------------+------------+
+| AUT009    | Drek Tailor | Australia      | Melbourne   | PB01       |
++-----------+-------------+----------------+-------------+------------+
+1 row in set (0.00 sec)
+
+10.
+
+select author_id,author_name,author_city,author_country,publish_id,publish_name,publish_city,publish_start_date,branches from (select dense_rank() over(order by publish_start_date) r,author_id,author_name,author_city,author_country,p.publish_id,publish_name,publish_city,publish_start_date,branches from publish p join author a on a.publish_id=p.publish_id)a where r=1;
++-----------+----------------------+-------------+----------------+------------+---------------------+--------------+--------------------+----------+
+| author_id | author_name          | author_city | author_country | publish_id | publish_name        | publish_city | publish_start_date | branches |
++-----------+----------------------+-------------+----------------+------------+---------------------+--------------+--------------------+----------+
+| AUT001    | William Norton       | Cambridge   | UK             | PB01       | Jex Max Publication | Berlin       | 1929-04-21         |       10 |
+| AUT005    | S.B.Swaminathan      | Delhi       | INDIA          | PB01       | Jex Max Publication | Berlin       | 1929-04-21         |       10 |
+| AUT009    | Drek Tailor          | Melbourne   | Australia      | PB01       | Jex Max Publication | Berlin       | 1929-04-21         |       10 |
+| AUT003    | John Betjeman Hunter | Moscow      | RUSSIA         | PB01       | Jex Max Publication | Berlin       | 1929-04-21         |       10 |
++-----------+----------------------+-------------+----------------+------------+---------------------+--------------+--------------------+----------+
+4 rows in set (0.00 sec)
+
+11.
+
+select continent,count(continent) count from(select a.author_id,case when author_country in ("INDIA","RUSSIA") then "Asia" when author_country in ("USA","CANADA") then "America" when author_country in ("Australia") then "Australia" when author_country in ("UK","GERMANY","EUROPE") then "Europe" end as continent from author a join publish p on a.publish_id=p.publish_id)a group by continent;
++-----------+-------+
+| continent | count |
++-----------+-------+
+| Europe    |     4 |
+| America   |     3 |
+| Asia      |     2 |
+| Australia |     1 |
++-----------+-------+
+4 rows in set (0.00 sec)
+
+select author_country,continent,count(continent) over(partition by continent) count from(select author_country,a.author_id,case when author_country in ("INDIA","RUSSIA") then "Asia" when author_country in ("USA","CANADA") then "America" when author_country in ("Australia") then "Australia" when author_country in ("UK","GERMANY","EUROPE") then "Europe" end as continent from author a join publish p on a.publish_id=p.publish_id)a;
++----------------+-----------+-------+
+| author_country | continent | count |
++----------------+-----------+-------+
+| USA            | America   |     3 |
+| CANADA         | America   |     3 |
+| USA            | America   |     3 |
+| RUSSIA         | Asia      |     2 |
+| INDIA          | Asia      |     2 |
+| Australia      | Australia |     1 |
+| UK             | Europe    |     4 |
+| UK             | Europe    |     4 |
+| EUROPE         | Europe    |     4 |
+| GERMANY        | Europe    |     4 |
++----------------+-----------+-------+
+10 rows in set (0.00 sec)
+
+create table trip(trip_id varchar(10),trip_source varchar(10),trip_destination varchar(10),trip_start_time time,trip_end_time time,trip_cost integer(10),dynamic_fare varchar(5));
+
+insert into trip values('TP01','CHN','BGL','13:04','15:40',3500,'Y');
+insert into trip values('TP02',	'BGL',	'MUM'	,'18:20',	'19:20'	,6700,	'Y');
+insert into trip values('TP03',	'CHN',	'HYD'	,'09:45',	'11:10'	,3000,	'Y');
+insert into trip values('TP04',	'HYD' ,'BGL'	,'12:20',	'13:25',2700,	'N');
+insert into trip values('TP05'	,'MUM'	,'NDL',	'23:00'	,'01:25',	4500,	'Y');
+insert into trip values('TP06',	'BGL',	'NDL',	'19:40'	,'22:10',	5000,	'N');
+insert into trip values('TP07',	'NDL',	'MUM',	'16:45'	,'17:50',	6000,	'Y');
+insert into trip values('TP08',	'MUM',	'BGL',	'20:20'	,'23:45',	5000,	'N');
+insert into trip values('TP09',	'NDL',	'HYD',	'11:25'	,'13:45',	3000,	'N');
+insert into trip values('TP10'	,'HYD',	'CHN',	'20:30'	,'22:20',	4500,	'Y');
+insert into trip values('TP11',	'BGL',	'CHN',	'23:45'	,'01:05',	3900,	'Y');
+
+1.
+
+select ts1,td1,td2,td3,trip_cost from (select ts1,td1,td2,td3,dense_rank() over(order by trip_cost) r,trip_cost from (select t1.trip_source ts1,t1.trip_destination td1,t2.trip_source ts2,t2.trip_destination td2,t3.trip_source ts3,t3.trip_destination td3,t1.trip_cost+t2.trip_cost+t3.trip_cost trip_cost from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where t1.trip_source="CHN" and t3.trip_destination="NDL")a)b where r=1;
++------+------+------+------+-----------+
+| ts1  | td1  | td2  | td3  | trip_cost |
++------+------+------+------+-----------+
+| CHN  | HYD  | BGL  | NDL  |     10700 |
++------+------+------+------+-----------+
+1 row in set (0.00 sec)
+
+2.
+
+select t1.trip_source ts1,t1.trip_destination td1,case when t1.trip_end_time>t1.trip_start_time then timediff(t1.trip_end_time,t1.trip_start_time) else timediff("24:00:00",timediff(t1.trip_start_time,t1.trip_end_time)) end as t1,t2.trip_source ts2,t2.trip_destination td2,case when t2.trip_end_time>t2.trip_start_time then timediff(t2.trip_end_time,t2.trip_start_time) else timediff("24:00:00",timediff(t2.trip_start_time,t2.trip_end_time)) end as t2,t3.trip_source ts3,t3.trip_destination td3,case when t3.trip_end_time>t3.trip_start_time then timediff(t3.trip_end_time,t3.trip_start_time) else timediff("24:00:00",timediff(t3.trip_start_time,t3.trip_end_time)) end as t3 from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where t1.trip_source="CHN" and t3.trip_destination="NDL";
++------+------+----------+------+------+----------+------+------+----------+
+| ts1  | td1  | t1       | ts2  | td2  | t2       | ts3  | td3  | t3       |
++------+------+----------+------+------+----------+------+------+----------+
+| CHN  | BGL  | 02:00:00 | BGL  | MUM  | 01:00:00 | MUM  | NDL  | 02:25:00 |
+| CHN  | HYD  | 01:25:00 | HYD  | BGL  | 01:05:00 | BGL  | NDL  | 02:30:00 |
++------+------+----------+------+------+----------+------+------+----------+
+2 rows in set (0.00 sec)
+
+select  ts1,td1,td2,td3,time from (select ts1,td1,td2,td3,dense_rank() over(order by time) r,time from(select ts1,td1,td2,td3,addtime(addtime(t1,t2),t3) time from (select t1.trip_source ts1,t1.trip_destination td1,case when t1.trip_end_time>t1.trip_start_time then timediff(t1.trip_end_time,t1.trip_start_time) else timediff("24:00:00",timediff(t1.trip_start_time,t1.trip_end_time)) end as t1,t2.trip_source ts2,t2.trip_destination td2,case when t2.trip_end_time>t2.trip_start_time then timediff(t2.trip_end_time,t2.trip_start_time) else timediff("24:00:00",timediff(t2.trip_start_time,t2.trip_end_time)) end as t2,t3.trip_source ts3,t3.trip_destination td3,case when t3.trip_end_time>t3.trip_start_time then timediff(t3.trip_end_time,t3.trip_start_time) else timediff("24:00:00",timediff(t3.trip_start_time,t3.trip_end_time)) end as t3 from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where t1.trip_source="CHN" and t3.trip_destination="NDL")a)b)c where r=1;
++------+------+------+------+----------+
+| ts1  | td1  | td2  | td3  | time     |
++------+------+------+------+----------+
+| CHN  | HYD  | BGL  | NDL  | 05:00:00 |
++------+------+------+------+----------+
+1 row in set (0.00 sec)
+
+3.
+
+select ts1,td1,ts2,td2,ts3,td3 from (select ts1,td1,ts2,td2,ts3,td3,dense_rank() over(order by cost) r from(select ts1,td1,ts2,td2,ts3,td3,c1+c2+c3 cost from(select ts1,td1,ts2,td2,ts3,td3,case when d1="Y" then c1 else 0 end as c1,case when d2="Y" then c2 else 0 end as c2,case when d3="Y" then c3 else 0 end as c3 from(select t1.trip_source ts1,t1.trip_destination td1,t2.trip_source ts2,t2.trip_destination td2,t3.trip_source ts3,t3.trip_destination td3,t1.dynamic_fare d1,t2.dynamic_fare d2,t3.dynamic_fare d3,t1.trip_cost c1,t2.trip_cost c2,t3.trip_cost c3 from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where t1.trip_source="CHN" and t3.trip_destination="NDL" and (t1.dynamic_fare="Y" or  t2.dynamic_fare="Y" or  t3.dynamic_fare="Y"))a)b)c)d where r=1;
++------+------+------+------+------+------+
+| ts1  | td1  | ts2  | td2  | ts3  | td3  |
++------+------+------+------+------+------+
+| CHN  | HYD  | HYD  | BGL  | BGL  | NDL  |
++------+------+------+------+------+------+
+1 row in set (0.00 sec)
+
+select t1.trip_source ts1,t1.trip_destination td1,t2.trip_source ts2,t2.trip_destination td2,t3.trip_source ts3,t3.trip_destination td3,t1.trip_cost+t2.trip_cost+t3.trip_cost trip_cost from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where t1.trip_source="CHN" and t3.trip_destination="NDL" and t1.dynamic_fare="Y" and  t2.dynamic_fare="Y" and  t3.dynamic_fare="Y";
++------+------+------+------+------+------+-----------+
+| ts1  | td1  | ts2  | td2  | ts3  | td3  | trip_cost |
++------+------+------+------+------+------+-----------+
+| CHN  | BGL  | BGL  | MUM  | MUM  | NDL  |     14700 |
++------+------+------+------+------+------+-----------+
+1 row in set (0.00 sec)
+
+4.
+
+select * from (select t1.trip_source ts1,t1.trip_destination td1,t2.trip_source ts2,t2.trip_destination td2,t3.trip_source ts3,t3.trip_destination td3 from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where t1.trip_source="CHN" and t3.trip_destination="NDL" and (t3.trip_end_time-t1.trip_start_time)>0)a ;
++------+------+------+------+------+------+
+| ts1  | td1  | ts2  | td2  | ts3  | td3  |
++------+------+------+------+------+------+
+| CHN  | HYD  | HYD  | BGL  | BGL  | NDL  |
++------+------+------+------+------+------+
+1 row in set (0.00 sec)
+
+5.
+
+select ts1,td1,td2,td3 from (select ts1,td1,td2,td3,dense_rank() over(order by time) r from (select ts1,td1,td2,td3,addtime(t1,t2) time from (select t1.trip_source ts1,t1.trip_destination td1,abs(timediff(t1.trip_end_time,t2.trip_start_time)) t1,t2.trip_source ts2,t2.trip_destination td2,abs(timediff(t2.trip_end_time,t3.trip_start_time)) t2,t3.trip_source ts3,t3.trip_destination td3 from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where t1.trip_source="CHN" and t3.trip_destination="NDL")a)b)c where r=1;
++------+------+------+------+
+| ts1  | td1  | td2  | td3  |
++------+------+------+------+
+| CHN  | BGL  | MUM  | NDL  |
++------+------+------+------+
+1 row in set (0.00 sec)
+
+6.
+
+select ts1,td1,td2,td3 from (select ts1,td1,td2,td3,dense_rank() over(order by count) r from (select ts1,td1,td2,td3,case when td2="CHN" and td3 is null then 1 when td2 is not null and td3="CHN" then 2 else 0 end as count from (select ts1,td1,td2,case when td3!="CHN" then null else td3 end as td3 from(select t1.trip_source ts1,t1.trip_destination td1,t2.trip_source ts2,t2.trip_destination td2,t3.trip_source ts3,t3.trip_destination td3 from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where (t1.trip_source="NDL" and t2.trip_destination="CHN") or (t1.trip_source="NDL" and t3.trip_destination="CHN") group by ts1,td1,td2)a)b)c)d where r=1;
++------+------+------+------+
+| ts1  | td1  | td2  | td3  |
++------+------+------+------+
+| NDL  | HYD  | CHN  | NULL |
++------+------+------+------+
+1 row in set (0.00 sec)
+
+select source,destination from(select source,destination, dense_rank() over(order by count1) r from(select source,destination,count(source) over(partition by rn) count1 from (select source,destination,rn from (select row_number() over() as rn,ts1 source,td1 destination,ts2,case when td3!="CHN" then null else ts3 end as ts3,td2,case when td3!="CHN" then null else td3 end as td3 from(select t1.trip_source ts1,t1.trip_destination td1,t2.trip_source ts2,t2.trip_destination td2,t3.trip_source ts3,t3.trip_destination td3 from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where (t1.trip_source="NDL" and t2.trip_destination="CHN") or (t1.trip_source="NDL" and t3.trip_destination="CHN") group by ts1,td1,td2)a)b
+    -> union
+    -> select source,destination,rn from (select row_number() over() as rn,ts1,td1,ts2 source,case when td3!="CHN" then null else ts3 end as ts3,td2 destination,case when td3!="CHN" then null else td3 end as td3 from(select t1.trip_source ts1,t1.trip_destination td1,t2.trip_source ts2,t2.trip_destination td2,t3.trip_source ts3,t3.trip_destination td3 from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where (t1.trip_source="NDL" and t2.trip_destination="CHN") or (t1.trip_source="NDL" and t3.trip_destination="CHN") group by ts1,td1,td2)a)b
+    -> union
+    -> select source,destination,rn from (select row_number() over() as rn,ts1,td1,ts2,case when td3!="CHN" then null else ts3 end as source,td2 ,case when td3!="CHN" then null else td3 end as destination from(select t1.trip_source ts1,t1.trip_destination td1,t2.trip_source ts2,t2.trip_destination td2,t3.trip_source ts3,t3.trip_destination td3 from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where (t1.trip_source="NDL" and t2.trip_destination="CHN") or (t1.trip_source="NDL" and t3.trip_destination="CHN") group by ts1,td1,td2)a)b)aaa)bbb)ccc where r=1;
++--------+-------------+
+| source | destination |
++--------+-------------+
+| NDL    | HYD         |
+| HYD    | CHN         |
+| NULL   | NULL        |
++--------+-------------+
+3 rows in set (0.00 sec)
+
+7.
+
+select t time,ts1,td1,case when td1="BGL" then null else ts2 end as ts2,case when td1="BGL" then null else td2 end as td2 from(select t1.trip_source ts1,t1.trip_destination td1,t2.trip_source ts2,t2.trip_destination td2,t1.trip_start_time t from trip t1 join trip t2 on t1.trip_destination=t2.trip_source where (t1.trip_source="CHN" and t2.trip_destination="BGL") or (t1.trip_source="CHN" and t1.trip_destination="BGL") group by ts1,td1,ts2)a where t<"11:00:00";
++----------+------+------+------+------+
+| time     | ts1  | td1  | ts2  | td2  |
++----------+------+------+------+------+
+| 09:45:00 | CHN  | HYD  | HYD  | BGL  |
++----------+------+------+------+------+
+1 row in set (0.00 sec)
+
+8.
+
+select ts1,td1,ts2,td2,ts3,td3, time,same_day from(select ts1,td1,ts2,td2,ts3,td3,dense_rank() over(order by time) r,time,same_day from(select ts1,td1,ts2,td2,ts3,td3,timediff(destination,source) same_day,addtime(addtime(t1,t2),t3) time from(select case when tte1>tts1 then timediff(tte1,tts1) else timediff("24:00:00",timediff(tts1,tte1)) end as t1,case when tte2>tts2 then timediff(tte2,tts2) else timediff("24:00:00",timediff(tts2,tte2)) end as t2,case when tte3<tts3 and tts3!="00:00:00" then timediff("24:00:00",timediff(tts3,tte3)) when tte3<tts3 and tts3="00:00:00" then "00:00:00" else timediff(tte3,tts3) end as t3,ts1,td1,ts2,td2,ts3,td3,tts1 source,case when tte3!="00:00:00" then tte3 else tte2 end as destination from(select ts1,td1,tts1,tte1,ts2,td2,tts2,tte2,ts3,td3,case when ts3 is null and td3 is null then '00:00:00' else tts3 end as tts3,case when ts3 is null and td3 is null then '00:00:00' else tte3 end as tte3 from(select ts1,td1,tts1,tte1,ts2,td2,tts2,tte2,case when td3!="CHN" then null else ts3 end as ts3,case when td3!="CHN" then null else td3 end as td3,tts3,tte3 from(select t1.trip_source ts1,t1.trip_destination td1,t1.trip_start_time tts1,t1.trip_end_time tte1,t2.trip_source ts2,t2.trip_destination td2,t2.trip_start_time tts2,t2.trip_end_time tte2,t3.trip_source ts3,t3.trip_destination td3,t3.trip_start_time tts3,t3.trip_end_time tte3 from trip t1 join trip t2 on t1.trip_destination=t2.trip_source join trip t3 on t2.trip_destination=t3.trip_source where (t1.trip_source="NDL" and t2.trip_destination="CHN") or (t1.trip_source="NDL" and t3.trip_destination="CHN") group by ts1,td1,td2)a)b)c)d)e)f where same_day>0 or r=1;
++------+------+------+------+------+------+-----------------+-----------------+
+| ts1  | td1  | ts2  | td2  | ts3  | td3  | time            | same_day        |
++------+------+------+------+------+------+-----------------+-----------------+
+| NDL  | HYD  | HYD  | CHN  | NULL | NULL | 04:10:00.000000 | 10:55:00.000000 |
++------+------+------+------+------+------+-----------------+-----------------+
+1 row in set (0.02 sec)
+
+9.
+
+select trip_id,trip_source,trip_destination from (select trip_id ,trip_source,trip_destination,dense_rank() over(order by time) r from (select trip_id,trip_source,trip_destination,TRIP_START_TIME,TRIP_END_TIME,trip_cost,dynamic_fare,time(abs(timediff(trip_end_time,trip_start_time))) time from trip)a)b where r=1;
++---------+-------------+------------------+
+| trip_id | trip_source | trip_destination |
++---------+-------------+------------------+
+| TP02    | BGL         | MUM              |
++---------+-------------+------------------+
+1 row in set (0.00 sec)
+
+10.
+
+select trip_id,trip_source,trip_destination from (select trip_id ,trip_source,trip_destination,dense_rank() over(order by time desc) r from (select trip_id,trip_source,trip_destination,TRIP_START_TIME,TRIP_END_TIME,trip_cost,dynamic_fare,time(abs(timediff(trip_end_time,trip_start_time))) time from trip where dynamic_fare="Y")a)b where r=1;
++---------+-------------+------------------+
+| trip_id | trip_source | trip_destination |
++---------+-------------+------------------+
+| TP11    | BGL         | CHN              |
++---------+-------------+------------------+
+1 row in set (0.00 sec)
+
+
+create table stats(stats_id integer(5),month integer(2),year integer(4),temp_farenheit double(20,2),rain_inch double(10,2));
+
+insert into stats values(13,	1,	2010,	57.4	,0.31);
+insert into stats values(13,	5,	2010,	91.7	,5.15);
+insert into stats values(13,	12,	2010,	12.6	,8.34);
+insert into stats values(13,	9,	2010,	100.3,	10.34);
+insert into stats values(44,	9,	2010,	27.2,	3.45);
+insert into stats values(44,	2,	2010,	27.3,	0.18);
+insert into stats values(44,	6,	2010,	74.8,	2.11);
+insert into stats values(66,	3,	2010,	6.7,	2.1);
+insert into stats values(66,	7,	2010,	65.8,	4.52);
+
+create table station(station_id integer(5),city varchar(20),state varchar(10),lat_n integer(5),long_w integer(10));
+
+insert into station values(13,	"Phoenix",	"AZ",	33,	112);
+insert into station values(44,	"Denver" ,	"CO",	40,	105);
+insert into station values(66,	"Caribou",	"ME",	47,	68);
+
+
+1.
+
+select temp_farenheit,rain_inch,city,stats_id from (select temp_farenheit,rain_inch,city,dense_rank() over(partition by city order by temp_farenheit desc ,rain_inch desc) r,stats_id from stats s1 join station s2 on s1.stats_id=s2.station_id)a where r=1;
++----------------+-----------+---------+----------+
+| temp_farenheit | rain_inch | city    | stats_id |
++----------------+-----------+---------+----------+
+|          65.80 |      4.52 | Caribou |       66 |
+|          74.80 |      2.11 | Denver  |       44 |
+|         100.30 |     10.34 | Phoenix |       13 |
++----------------+-----------+---------+----------+
+3 rows in set (0.00 sec)
+
+select temp_farenheit,rain_inch,city,stats_id from (select temp_farenheit,rain_inch,city,dense_rank() over(partition by city order by temp_farenheit desc) r,dense_rank() over(partition by city order by rain_inch desc) r1,stats_id from stats s1 join station s2 on s1.stats_id=s2.station_id)a where r=1 or r1=1;
++----------------+-----------+---------+----------+
+| temp_farenheit | rain_inch | city    | stats_id |
++----------------+-----------+---------+----------+
+|          65.80 |      4.52 | Caribou |       66 |
+|          27.20 |      3.45 | Denver  |       44 |
+|          74.80 |      2.11 | Denver  |       44 |
+|         100.30 |     10.34 | Phoenix |       13 |
++----------------+-----------+---------+----------+
+4 rows in set (0.00 sec)
+
+2.
+
+select station_id,city,state,month,year,((temp_farenheit-32)*5/9) as temp_celcius,(rain_inch*03937) as rain_centimeters from stats join station on stats_id=station_id;
++------------+---------+-------+-------+------+--------------+------------------+
+| station_id | city    | state | month | year | temp_celcius | rain_centimeters |
++------------+---------+-------+-------+------+--------------+------------------+
+|         13 | Phoenix | AZ    |     1 | 2010 |    14.111111 |          1220.47 |
+|         13 | Phoenix | AZ    |     5 | 2010 |    33.166667 |         20275.55 |
+|         13 | Phoenix | AZ    |    12 | 2010 |   -10.777778 |         32834.58 |
+|         13 | Phoenix | AZ    |     9 | 2010 |    37.944444 |         40708.58 |
+|         44 | Denver  | CO    |     9 | 2010 |    -2.666667 |         13582.65 |
+|         44 | Denver  | CO    |     2 | 2010 |    -2.611111 |           708.66 |
+|         44 | Denver  | CO    |     6 | 2010 |    23.777778 |          8307.07 |
+|         66 | Caribou | ME    |     3 | 2010 |   -14.055556 |          8267.70 |
+|         66 | Caribou | ME    |     7 | 2010 |    18.777778 |         17795.24 |
++------------+---------+-------+-------+------+--------------+------------------+
+9 rows in set (0.00 sec)
+
+3.
+
+select stats_id,month,year,round((temp_farenheit-32)*5/9,2) as temp_farenheit,round(avg_rain*03937,2) rain_inch from(select stats_id,month,year,case when temp_farenheit is null then avg_temp else temp_farenheit end as temp_farenheit,case when rain_inch is null then avg_rain else rain_inch end as avg_rain from (select temp_farenheit,rain_inch,stats_id,month,year,avg(case when rain_inch is not null then rain_inch end) over(partition by stats_id) avg_rain,avg(case when temp_farenheit is not null then temp_farenheit end) over(partition by stats_id) avg_temp from (select s2.stats_id,s2.month,s2.year,s1.temp_farenheit,s1.rain_inch from stats s1 right join stats1 s2 on s1.stats_id=s2.stats_id and s1.month=s2.month)a)b)c;
++----------+-------+------+----------------+-----------+
+| stats_id | month | year | temp_farenheit | rain_inch |
++----------+-------+------+----------------+-----------+
+|       13 |     1 | 2010 |          14.11 |   1220.47 |
+|       13 |     5 | 2010 |          33.17 |  20275.55 |
+|       13 |    12 | 2010 |         -10.78 |  32834.58 |
+|       13 |     9 | 2010 |          37.94 |  40708.58 |
+|       44 |     9 | 2010 |          -2.67 |  13582.65 |
+|       44 |     2 | 2010 |          -2.61 |    708.66 |
+|       44 |     6 | 2010 |          23.78 |   8307.07 |
+|       44 |    11 | 2010 |           6.17 |   7532.79 |
+|       66 |     3 | 2010 |         -14.06 |   8267.70 |
+|       66 |     7 | 2010 |          18.78 |  17795.24 |
+|       66 |     6 | 2010 |           2.36 |  13031.47 |
+|       66 |    10 | 2010 |           2.36 |  13031.47 |
++----------+-------+------+----------------+-----------+
+12 rows in set (0.00 sec)
+
+4.
+
+select station_id,city,state,month,year from (select station_id,city,state,month,year,temp_celcius,avg(temp_celcius) over() as avg_temp,rain_centimeter,avg(rain_centimeter) over() as avg_rain from (select station_id,city,state,month,year,((temp_farenheit-32)*5/9) as temp_celcius,(rain_inch*03937) as rain_centimeter from stats join station on stats_id=station_id)a)b where avg_temp<temp_celcius and avg_rain>rain_centimeter;
++------------+---------+-------+-------+------+
+| station_id | city    | state | month | year |
++------------+---------+-------+-------+------+
+|         13 | Phoenix | AZ    |     1 | 2010 |
+|         44 | Denver  | CO    |     6 | 2010 |
++------------+---------+-------+-------+------+
+2 rows in set (0.00 sec)
+
+select station_id,city,state,month,year,temp_farenheit,avg_temp from(select station_id,city,state,month,year,temp_farenheit,avg(temp_farenheit) over() avg_temp,rain_inch,avg(rain_inch) over() avg_rainfall from stats join station on stats_id=station_id)a where avg_temp>temp_farenheit and avg_rainfall<rain_inch;
++------------+---------+-------+-------+------+----------------+-----------+
+| station_id | city    | state | month | year | temp_farenheit | avg_temp  |
++------------+---------+-------+-------+------+----------------+-----------+
+|         13 | Phoenix | AZ    |    12 | 2010 |          12.60 | 51.533333 |
++------------+---------+-------+-------+------+----------------+-----------+
+1 row in set (0.00 sec)
+
+5.
+
+select city,state,rainfall,average_rainfall from (select city,state,rainfall,average_rainfall,dense_rank() over(partition by city order by rainfall desc) r from (select city,state,rain_inch rainfall,avg(rain_inch) over() average_rainfall from stats s join station s1 on stats_id=station_id)a where average_rainfall>rainfall)b where r=1;
++---------+-------+----------+------------------+
+| city    | state | rainfall | average_rainfall |
++---------+-------+----------+------------------+
+| Caribou | ME    |     2.10 |         4.055556 |
+| Denver  | CO    |     3.45 |         4.055556 |
+| Phoenix | AZ    |     0.31 |         4.055556 |
++---------+-------+----------+------------------+
+3 rows in set (0.00 sec)
+
+select city,state,rainfall,average_rainfall from (select city,state,rainfall,average_rainfall,dense_rank() over( order by rainfall desc) r from (select city,state,rain_inch rainfall,avg(rain_inch) over() average_rainfall from stats s join station s1 on stats_id=station_id)a where average_rainfall>rainfall)b where r=1;
++--------+-------+----------+------------------+
+| city   | state | rainfall | average_rainfall |
++--------+-------+----------+------------------+
+| Denver | CO    |     3.45 |         4.055556 |
++--------+-------+----------+------------------+
+1 row in set (0.00 sec)
+
+6.
+
+select stats_id,month,avg_temp,city,temp_farenheit from (select stats_id,month,avg_temp,city,temp_farenheit,dense_rank() over(order by temp_farenheit desc) r from (select stats_id,month,avg_temp,city,temp_farenheit,dense_rank() over(partition by city order by temp_farenheit desc) d from (select stats_id,month,avg(temp_farenheit) over() avg_temp,city,temp_farenheit from stats join station on station_id=stats_id)a where avg_temp>temp_farenheit)b where d=1)c where r=2;
++----------+-------+-----------+---------+----------------+
+| stats_id | month | avg_temp  | city    | temp_farenheit |
++----------+-------+-----------+---------+----------------+
+|       13 |    12 | 51.533333 | Phoenix |          12.60 |
++----------+-------+-----------+---------+----------------+
+1 row in set (0.00 sec)
+
+7.
+
+create view tempreport as select stats_id,month,year,round((temp_farenheit-32)*5/9,2) as temp_farenheit,round(avg_rain*03937,2) rain_inch from(select stats_id,month,year,case when temp_farenheit is null then avg_temp else temp_farenheit end as temp_farenheit,case when rain_inch is null then avg_rain else rain_inch end as avg_rain from (select temp_farenheit,rain_inch,stats_id,month,year,avg(case when rain_inch is not null then rain_inch end) over(partition by stats_id) avg_rain,avg(case when temp_farenheit is not null then temp_farenheit end) over(partition by stats_id) avg_temp from (select s2.stats_id,s2.month,s2.year,s1.temp_farenheit,s1.rain_inch from stats s1 right join stats1 s2 on s1.stats_id=s2.stats_id and s1.month=s2.month)a)b)c;
+Query OK, 0 rows affected (0.18 sec)
+
+mysql> select * from tempreport;
++----------+-------+------+----------------+-----------+
+| stats_id | month | year | temp_farenheit | rain_inch |
++----------+-------+------+----------------+-----------+
+|       13 |     1 | 2010 |          14.11 |   1220.47 |
+|       13 |     5 | 2010 |          33.17 |  20275.55 |
+|       13 |    12 | 2010 |         -10.78 |  32834.58 |
+|       13 |     9 | 2010 |          37.94 |  40708.58 |
+|       44 |     9 | 2010 |          -2.67 |  13582.65 |
+|       44 |     2 | 2010 |          -2.61 |    708.66 |
+|       44 |     6 | 2010 |          23.78 |   8307.07 |
+|       44 |    11 | 2010 |           6.17 |   7532.79 |
+|       66 |     3 | 2010 |         -14.06 |   8267.70 |
+|       66 |     7 | 2010 |          18.78 |  17795.24 |
+|       66 |     6 | 2010 |           2.36 |  13031.47 |
+|       66 |    10 | 2010 |           2.36 |  13031.47 |
++----------+-------+------+----------------+-----------+
+12 rows in set (0.00 sec)
+
+8.
+
+select stats_id,diff_temp from (select stats_id,temp_farenheit-temp as diff_temp from(select stats_id,temp_farenheit,lead(temp_farenheit) over(partition by stats_id order by month) temp from (select month,stats_id,(temp_farenheit-32)*5/9 temp_farenheit from stats join station on stats_id=station_id)a)b)c where diff_temp<5 or diff_temp>20;
++----------+------------+
+| stats_id | diff_temp  |
++----------+------------+
+|       13 | -19.055556 |
+|       13 |  -4.777778 |
+|       13 |  48.722222 |
+|       44 | -26.388889 |
+|       44 |  26.444444 |
+|       66 | -32.833333 |
++----------+------------+
+6 rows in set (0.00 sec)
+
+select stats_id,diff_temp from (select stats_id,temp_farenheit-temp as diff_temp from (select stats_id,temp_farenheit,case when temp_farenheit1 is null then 0 else temp_farenheit1 end as temp from(select stats_id,temp_farenheit,lead(temp_farenheit) over(partition by stats_id order by month) temp_farenheit1 from (select month,stats_id,(temp_farenheit-32)*5/9 temp_farenheit from stats join station on stats_id=station_id)a)b)c)d where diff_temp<5 or diff_temp>20;
++----------+------------+
+| stats_id | diff_temp  |
++----------+------------+
+|       13 | -19.055556 |
+|       13 |  -4.777778 |
+|       13 |  48.722222 |
+|       13 | -10.777778 |
+|       44 | -26.388889 |
+|       44 |  26.444444 |
+|       44 |  -2.666667 |
+|       66 | -32.833333 |
++----------+------------+
+8 rows in set (0.00 sec)
+
+9.
+
+select station_id,city,state,month,year,temp_celcius from (select station_id,city,state,month,year,((temp_farenheit-32)*5/9) as temp_celcius from stats join station on stats_id=station_id)a where temp_celcius<0;
++------------+---------+-------+-------+------+--------------+
+| station_id | city    | state | month | year | temp_celcius |
++------------+---------+-------+-------+------+--------------+
+|         13 | Phoenix | AZ    |    12 | 2010 |   -10.777778 |
+|         44 | Denver  | CO    |     9 | 2010 |    -2.666667 |
+|         44 | Denver  | CO    |     2 | 2010 |    -2.611111 |
+|         66 | Caribou | ME    |     3 | 2010 |   -14.055556 |
++------------+---------+-------+-------+------+--------------+
+4 rows in set (0.00 sec)
+
+10.
+
+select state,count(state) count from (select city,state,rain_inch rainfall,avg(rain_inch) over() average_rainfall from stats s join station s1 on stats_id=station_id)a where average_rainfall<rainfall group by state;
++-------+-------+
+| state | count |
++-------+-------+
+| AZ    |     3 |
+| ME    |     1 |
++-------+-------+
+2 rows in set (0.00 sec)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
