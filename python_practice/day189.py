@@ -95,15 +95,29 @@ else:
 # [list2.append(i) for i in list1 if i not in list2]
 # print(list2)
 
-prime=[i for i in range(1,50) if i!=1 and 0 not in [i%j for j in range(2,i)]]
-print(prime)
+# prime=[i for i in range(1,50) if i!=1 and 0 not in [i%j for j in range(2,i)]]
+# print(prime)
+#
+# prime1=[i for i in range(1,50) if i!=1 and all(i%j!=0  for j in range(2,i))]
+# print(prime1)
+#
+# primedict={i:('Yes' if i!=1 and 0 not in [i%j for j in range(2,i)] else 'No') for i in range(1,10)}
+# print(primedict)
+#
+# prime=[i for i in range(1,50) for j in range(2,i) if i%j==0 and i!=j]
+# list2=[i for i in range(1,50) if i not in prime]
+# print(list2)
+#
+# l1=[2,4,6,7,8]
+# l2=lambda a:a*2
+# print(l2(l1))
 
-prime1=[i for i in range(1,50) if i!=1 and all(i%j!=0  for j in range(2,i))]
-print(prime1)
-
-primedict={i:('Yes' if i!=1 and 0 not in [i%j for j in range(2,i)] else 'No') for i in range(1,10)}
-print(primedict)
-
-prime=[i for i in range(1,50) for j in range(2,i) if i%j==0 and i!=j]
-list2=[i for i in range(1,50) if i not in prime]
-print(list2)
+string_list=[]
+num_list=[]
+list1=[1,2,3,'a','b','c']
+for i in list1:
+    try:
+        string_list.append(int(i))
+    except:
+        num_list.append(i)
+print(string_list,num_list)
