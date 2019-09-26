@@ -1,6 +1,6 @@
 class Shape():
     def area(self):
-        self.length=0
+        self.area=0
 
 class Square(Shape):
     def __init__(self, l):

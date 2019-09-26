@@ -12,14 +12,15 @@ class Coordinate(object):
     def __str__(self):
         return '<' + str(self.getX()) + ',' + str(self.getY()) + '>'
 
-    def eq(self, a, b):
-            return (a == self.x and b == self.y)
+    def __eq__(self, other):
+            return self.x == self.y
 
-    def repr(self):
-        print('Coordinate(', self.getX(), ',', self.getY(), ')')
+    def __repr__(self):
+        return eval(repr(self.x))==self.x and eval(repr(self.y))==self.y
 
 
-cor=Coordinate(11,15)
-print(cor.eq(11,15))
+cor=Coordinate(11,11)
+cor1=(cor.x==cor.y)
+print(cor1)
 print(cor.__str__())
-cor.repr()
+print(cor.__repr__())
