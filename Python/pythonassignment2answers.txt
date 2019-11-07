@@ -1,0 +1,129 @@
+student_dict = {}
+while True:
+    roll_id = input('Enter roll_id: ')
+    name = input('Enter name: ')
+    class_name = input('Enter class_name: ')
+    marks = input('Enter marks with comma seperated: ')
+    sub_dict = {}
+    sub_dict['name'] = name
+    sub_dict['class_name'] = class_name
+    sub_dict['marks'] = marks.split(',')
+    student_dict[roll_id] = sub_dict
+    decision = input("Do you want to continue or not ?(Y/N)")
+    if decision.lower() == 'y':
+        continue
+    else:
+        break
+print(student_dict)
+
+inventory = {
+
+    'gold': 500,
+
+    'pouch': ['flint', 'twine', 'gemstone'],
+
+    'backpack': ['xylophone', 'dagger', 'bedroll', 'bread loaf']
+
+}
+
+inventory['pocket'] = ''
+inventory['pocket'] = [ 'seashell', 'strange berry', 'lint']
+inventory['backpack'].sort()
+inventory['backpack'].remove('dagger')
+inventory['gold'] = int(inventory['gold'])+50
+print(inventory)
+
+
+student_details = {}
+student_details['student1'] = [100, 99, 97]
+student_details['student2'] = [100, 89, 90]
+for i in student_details:
+    marks = student_details[i]
+    total = sum(marks)
+    average = total/len(marks)
+    print(i,total,'{:.2f}'.format(average))
+
+import re
+with open('marks_file.txt', 'w') as writefile:
+    writefile.writelines(['science = 50\n', 'maths = 90\n', 'english = 85\n', 'tamil = 92\n'])
+
+with open('marks_file.txt') as readfile:
+    read_data = readfile.readlines()
+    marks = []
+    for i in read_data:
+        m = re.findall('\d+',i)
+        marks.extend(m)
+    total = 0
+    for i in marks:
+        total = total + int(i)
+    print(total)
+
+
+def add(a, b):
+    return a+b
+
+def subtract(a, b):
+    return a-b
+
+def multiply(a, b):
+    return a*b
+
+def divide(a, b):
+    try:
+        return a/b
+    except ZeroDivisionError as e:
+        return 'error occured '+str(e)
+
+try:
+    a = int(input())
+    b = int(input())
+    print('Addition : ', add(a, b))
+    print('Subtraction : ', subtract(a, b))
+    print('Multiplication : ', multiply(a, b))
+    print('Division : ', divide(a, b))
+
+except ValueError as e:
+    print("Instead of integer, string is given ",e)
+
+def concatenate(string1, string2):
+    return string1+string2
+
+
+string1 = input()
+string2 = input()
+print(concatenate(string1,string2))
+
+
+def sum_digits(num):
+    num = str(num)
+    sum_num = 0
+    for i in num:
+        sum_num = sum_num + int(i)
+    return sum_num
+
+num = int(input())
+print(sum_digits(num))
+
+
+def write_file():
+    with open('marks_file.txt', 'w') as writefile:
+        writefile.writelines(['science = 50\n', 'maths = 90\n', 'english = 85\n', 'tamil = 92\n'])
+
+
+import re
+def read_file():
+    with open('marks_file.txt') as readfile:
+        read_data = readfile.readlines()
+        marks = []
+        for i in read_data:
+            m = re.findall('\d+',i)
+            marks.extend(m)
+        total = 0
+        for i in marks:
+            total = total + int(i)
+        print(total)
+
+write_file()
+read_file()
+
+
